@@ -5,6 +5,13 @@ from ytmusicapi import YTMusic
 import youtube_dl
 import eyed3
 
+# set up folders
+if not os.path.exists("tmp"):
+    os.mkdir("tmp")
+
+if not os.path.exists("out"):
+    os.mkdir("out")
+
 # variables
 ydl_opts = {
     'format': 'bestaudio/best',
@@ -33,7 +40,7 @@ try:
                 print()
                 print(f'Using "{default}" as search query...')
                 query = default
-                
+
             # if link
             if query.startswith("https://music.youtube.com/watch?v="):
                 video_id = query[34:-1].split('&')[0]
