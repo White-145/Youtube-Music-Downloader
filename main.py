@@ -71,6 +71,8 @@ try:
 
             if selection != 0:
                 break
+        print()
+        print("[ymd] getting song metadata")
 
         metadata = ytmusic.get_song(videoId=video_id)
         watch_playlist = ytmusic.get_watch_playlist(videoId=video_id)
@@ -101,8 +103,6 @@ try:
         os_name = os_name.replace('>', '')
         os_name = os_name.replace('|', '')
 
-        print()
-
         # download song
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
@@ -113,6 +113,7 @@ try:
 
         # edit metadata
         os.rename(f'{os_name}-{video_id}.mp3', f'{os_name}.mp3')
+        print("[ymd] editing file metadata")
         while True:
             try:
                 audiofile = eyed3.load(f'{os_name}.mp3')
@@ -133,11 +134,13 @@ try:
         audiofile.tag.save()
 
         # remove temp files and move song to out/ folder
+        print("[ymd] deleting temp files")
+
         os.remove(f'thumbnail-{video_id}.png')
         os.rename(f'{os_name}.mp3', f'../out/{os_name}.mp3')
 
         print()
-        print(f'Saved to out/{os_name}.mp3')
+        print(f'Saved to /out/{os_name}.mp3')
         print()
 except KeyboardInterrupt:
     pass
