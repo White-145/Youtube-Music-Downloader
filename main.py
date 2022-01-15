@@ -22,7 +22,6 @@ ydl_opts = {
     }],
 }
 ytmusic = YTMusic()
-
 default = "LSD - Genius"
 
 # change directory to tmp/
@@ -91,7 +90,7 @@ try:
         album = watch_playlist['tracks'][0]['album']['name']
         lyrics_text = lyrics['lyrics']
 
-        # full name without forbidden symbols: /\:*?"<>|
+        # get full name without forbidden symbols: /\:*?"<>|
         os_name = metadata['microformat']['microformatDataRenderer']['title'][:-16]
         os_name = os_name.replace('/', '')
         os_name = os_name.replace('\\', '')
@@ -103,13 +102,13 @@ try:
         os_name = os_name.replace('>', '')
         os_name = os_name.replace('|', '')
 
+        # delete existed
+        if os.path.exists(f'../out/{os_name}.mp3'):
+            os.remove(f'../out/{os_name}.mp3')
+
         # download song
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
-        try:
-            os.remove(f'../out/{os_name}.mp3')
-        except FileNotFoundError:
-            pass
 
         # edit metadata
         os.rename(f'{os_name}-{video_id}.mp3', f'{os_name}.mp3')
@@ -142,5 +141,6 @@ try:
         print()
         print(f'Saved to /out/{os_name}.mp3')
         print()
+
 except KeyboardInterrupt:
     pass
