@@ -1,8 +1,8 @@
-# What is Youtube Music Downloader
+## What is Youtube Music Downloader
 
 This is a python program that allows you to download music from Youtube Music with all metadata (from youtube music)
 
-# How to use
+## How to install
 
 To use you need to install 3 custom modules:
 * ytmusicapi
