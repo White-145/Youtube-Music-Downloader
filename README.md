@@ -5,9 +5,9 @@ This is a python program that allows you to download music from Youtube Music wi
 ## How to install
 
 To use you need to install 3 custom modules:
-* ytmusicapi
-* youtube_dl
-* eyeD3
+* ytmusicapi (for searching and metadata)
+* youtube_dl (for downloading)
+* eyeD3 (for editing metadata)
 
 using
 > pip install ytmusicapi
