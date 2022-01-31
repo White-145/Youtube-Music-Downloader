@@ -24,14 +24,14 @@ os.chdir('tmp')
 
 class Downloader:
     def __init__(self):
-        self.video_id = ''
-        self.lyrics = ''
-        self.url = ''
-        self.name = ''
-        self.os_name = ''
-        self.author = ''
-        self.year = 0
-        self.album = ''
+        self.video_id = None
+        self.lyrics = None
+        self.url = None
+        self.name = None
+        self.os_name = None
+        self.author = None
+        self.year = None
+        self.album = None
 
     def search(self):
         end = False
@@ -55,7 +55,7 @@ class Downloader:
                 print()
                 continue
             
-            length = max([len(x['title']) for x in search_results])
+            length = max([len(x['title']) for x in search_results][:5])
             tracks = 5 if len(search_results) > 5 else len(search_results)
             
             for i in range(tracks):
@@ -156,21 +156,24 @@ class Downloader:
         print(f'Saved to /out/{self.os_name}.mp3')
         print()
 
-        self.video_id = ''
-        self.lyrics = ''
-        self.url = ''
-        self.name = ''
-        self.os_name = ''
-        self.author = ''
-        self.year = 0
-        self.album = ''
+        self.video_id = None
+        self.lyrics = None
+        self.url = None
+        self.name = None
+        self.os_name = None
+        self.author = None
+        self.year = None
+        self.album = None
+
+    def main(self):
+        self.search()
+        self.get_metadata()
+        self.download()
+        self.edit_metadata()
+        self.end()
 
 ytmusic = YTMusic()
 downloader = Downloader()
 
 while True:
-    downloader.search()
-    downloader.get_metadata()
-    downloader.download()
-    downloader.edit_metadata()
-    downloader.end()
+    downloader.main()
