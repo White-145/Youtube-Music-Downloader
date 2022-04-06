@@ -1,5 +1,4 @@
 import os
-import sys
 from urllib.request import urlretrieve
 
 import eyed3
@@ -9,48 +8,8 @@ from ytmusicapi import YTMusic
 import colors
 import key_handler
 
-
-def wrap(num, min, max):
-	if min > max:
-		min, max = max, min
-	return (num - min) % (max - min + 1) + min
-
-def save_cursor():
-	print("\x1b[s", end='', flush=True)
-
-def restore_cursor():
-	print("\x1b[u", end='', flush=True)
-
-def clear():
-	print("\x1b[J", end='', flush=True)
-
-def move_y(step):
-	print(f'\x1b[{step}F', end='', flush=True)
-
-def hide():
-	print("\x1b[?25l", end='', flush=True)
-
-def show():
-	print("\x1b[?25h", end='', flush=True)
-
-def show_item(category, index):
-	index += 1
-	save_cursor()
-	clear()
-	print(Downloader.color_top.text(f'{category[0].title()} #{index}'))
-	print(f'{Downloader.color_key.text("Name:")}   {category[index]["title"]}')
-	print(f'{Downloader.color_key.text("Author:")} {category[index]["author"]}')
-	if category[0] == "song":
-		print(f'{Downloader.color_key.text("Album:")}  {category[index]["album"]}')
-	elif category[0] == "playlist":
-		print(f'{Downloader.color_key.text("Items:")}  {category[index]["items"]}')
-	
-	print()
-	print("Enter to select")
-	print("Esc to back")
-	restore_cursor()
-
 class Downloader:
+	# Download best and convert to mp3
 	ydl_opts = {
 		'format': 'bestaudio/best',
 		'postprocessors': [{
@@ -59,6 +18,7 @@ class Downloader:
 			'preferredquality': '192',
 		}],
 	}
+	# Colors
 	color_top = colors.Color(attr=colors.BOLD)
 	color_key = colors.Color(colors.BEIGE)
 	color_tip = colors.Color(colors.GREY)
@@ -96,6 +56,24 @@ class Downloader:
 
 		return os_name
 	
+	@staticmethod
+	def show_item(category, index):
+		index += 1
+		print("\x1b[s", end='')  # Save cursor position
+		print("\x1b[J", end='')  # Clear screen
+		print(Downloader.color_top.text(f'{category[0].title()} #{index}'))
+		print(f'{Downloader.color_key.text("Name:")}   {category[index]["title"]}')
+		print(f'{Downloader.color_key.text("Author:")} {category[index]["author"]}')
+		if category[0] == "song":
+			print(f'{Downloader.color_key.text("Album:")}  {category[index]["album"]}')
+		elif category[0] == "playlist":
+			print(f'{Downloader.color_key.text("Items:")}  {category[index]["items"]}')
+		
+		print()
+		print("Enter to select")
+		print("Esc to back")
+		print("\x1b[u", end='')  # Restore cursor position
+	
 	def from_link(self, link):
 		if link.startswith("https://"):
 			link = link[26:]
@@ -107,27 +85,22 @@ class Downloader:
 			self.video_id = link[8:].split('&')[0]
 			return True
 
-		if link.startswith("playlist?list="):
-			self.type = "playlist"
-			self.playlist_id = link[14:]
-			return True
-
 		return False
 	
 	@staticmethod
 	def return_search(error='', after_result=False):
-		restore_cursor()
+		print("\x1b[u", end='')       # Restore cursor
 		if after_result:
-			move_y(2)
-		move_y(1)
-		clear()
+			print("\x1b[2F", end='')  # Move 2 lines up
+		print("\x1b[1F", end='')      # Move 1 line up
+		print("\x1b[J", end='')       # Clear screen
 		print(Downloader.color_tip.text(error))
 	
 	def search(self):
 		while True:
-			save_cursor()
-			clear()
-			show()
+			print("\x1b[s", end='')     # Save cursor
+			print("\x1b[J", end='')     # Clear screen
+			print("\x1b[?25h", end='')  # Show cursor
 			query = input("Search query or link: ")
 			print()
 			if query == '':
@@ -142,27 +115,28 @@ class Downloader:
 					Downloader.return_search("Wrong link")
 					continue
 			
-			result_song_raw = Downloader.ytmusic.search(query=query, filter="songs")[:20]
-			result_album_raw = Downloader.ytmusic.search(query=query, filter="albums")[:20]
+			result_song_raw = Downloader.ytmusic.search(query=query, filter="songs", limit=40)
+			result_album_raw = Downloader.ytmusic.search(query=query, filter="albums", limit=40)
 
 			del query
 
+			# Convert songs and albums to dict
 			result_song = ["song"]
 			result_album = ["album"]
-			for i in range(len(result_song_raw)):
+			for song in result_song_raw:
 				result_song.append({
 					'type': "song",
-					'title': result_song_raw[i]['title'],
-					'author': result_song_raw[i]['artists'][0]['name'],
-					'album': result_song_raw[i]['album']['name'],
-					'id': result_song_raw[i]['videoId']
+					'title': song['title'],
+					'author': song['artists'][0]['name'],
+					'album': song['album']['name'],
+					'id': song['videoId']
 				})
-			for i in range(len(result_album_raw)):
+			for album in result_album_raw:
 				result_album.append({
 					'type': "album",
-					'title':  result_album_raw[i]['title'],
-					'author': result_album_raw[i]['artists'][0]['name'],
-					'id': result_album_raw[i]['browseId']
+					'title':  album['title'],
+					'author': album['artists'][0]['name'],
+					'id': album['browseId']
 				})
 			
 			del result_song_raw, result_album_raw
@@ -179,8 +153,8 @@ class Downloader:
 				Downloader.return_search("No results")
 				continue
 
-			hide()
-			show_item(categories[0], 0)
+			print("\x1b[?25l", end='')  # Hide cursor
+			Downloader.show_item(categories[0], 0)
 			
 			while (key := key_handler.wait_key()) != key_handler.Key.ESC:
 				match key:
@@ -188,26 +162,26 @@ class Downloader:
 						break
 					
 					case key_handler.Key.UP:
-						category = wrap(category + 1, 0, len(categories) - 1)
+						category = (category + 1) % len(categories)
 						index = 0
 
 					case key_handler.Key.DOWN:
-						category = wrap(category - 1, 0, len(categories) - 1)
+						category = (category - 1) % len(categories)
 						index = 0
 					
 					case key_handler.Key.LEFT:
-						index = wrap(index - 1, 0, len(categories[category]) - 2)
+						index = (index - 1) % (len(categories[category]) - 1)
 					
 					case key_handler.Key.RIGHT:
-						index = wrap(index + 1, 0, len(categories[category]) - 2)
+						index = (index + 1) % (len(categories[category]) - 1)
 					
-				show_item(categories[category], index)
+				Downloader.show_item(categories[category], index)
 
 			else:
 				Downloader.return_search(after_result=True)
 				continue
 
-			show()
+			print("\x1b[?25h", end='')  # Show cursor
 			selected = categories[category][index + 1]
 			del categories, category, index
 			
@@ -218,8 +192,8 @@ class Downloader:
 				self.playlist_id = selected['id']
 			
 			print(colors.GREY)
-			move_y(1)
-			clear()
+			print("\x1b[1F", end='')             # Move 1 line up
+			print("\x1b[J", end='', flush=True)  # Clear screen
 			break
 	
 	def catch_metadata(self, album=None):
@@ -346,6 +320,5 @@ if __name__ == '__main__':
 	try:
 		main()
 	finally:
-		print(colors.END)
-		show()
+		print(colors.END + "\x1b[?25h", end='')  # Remove colors and show cursor
 
